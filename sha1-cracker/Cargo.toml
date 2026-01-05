@@ -2,5 +2,8 @@
 name = "sha1-cracker"
 version = "0.1.0"
 edition = "2024"
+authors = ["me"]
 
 [dependencies]
+sha-1="0.9"
+hex="0.4"
