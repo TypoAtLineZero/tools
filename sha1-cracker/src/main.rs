@@ -1,3 +1,4 @@
+use sha1::Digest;
 use std::{
     env,
     error::Error,
@@ -25,9 +26,15 @@ fn main() -> Result<(), Box<dyn Error>> {
     let reader = BufReader::new(&wordlist_file);
 
     for line in reader.lines() {
-        let line = line?.trim().to_string();
-        println!("{}", line);
+        let line = line?;
+        let common_password = line.trim();
+        if hash_to_crack == 
+            &hex::encode(sha1::Sha1::digest(common_password.as_bytes())) {
+                println!("Password found: {}", &common_password);
+                return Ok (());
+        }
     }
+    println!("Password not found in wordslist :(");
 
     Ok(())
 }
