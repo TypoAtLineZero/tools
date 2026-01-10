@@ -19,3 +19,15 @@ pub fn enumerate(http_client: &Client, target: &str) -> Result<Vec<Subdomain>, E
         .filter(|subdomain: %String| subdomain.contains("*"))
         .collect();
     subdomains.insert(target.to_string());
+
+    let subdomains: Vec<Subdomain> = subdomains
+        .into_iter()
+        .map(|domain| Subdomain {
+            domain,
+            open_ports: Vec::new(),
+        })
+        .filter(resolve)
+        .collect();
+
+    Ok(subdomains)
+}
