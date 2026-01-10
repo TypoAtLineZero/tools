@@ -1,4 +1,4 @@
-uuse crate::{
+use crate::{
     common_ports::MOST_COMMON_PORTS_100,
     model::{Port, Subdomain},
 };
