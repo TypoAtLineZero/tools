@@ -33,3 +33,18 @@ pub async fn run<T: Send + 'static>(&self, spider: Arc<dyn Spider<Item = T>>) {
         self.delay,
         barrier.clone(),
     );
+
+    loop {
+        if let Some((visited_url, new_urls)) = new_urls_rx.try_recv().ok() {
+            visited_urls.insert(visited_url);
+
+            for url in new_urls {
+                if !visited_urls.contains(&url) {
+                    visited_urls.insert(url.clone());
+                    log::debug!("queueing: {}", url);
+                    let _ = urls_to_visit_tx.send(urls).await;
+                }
+            }
+        }
+
+
