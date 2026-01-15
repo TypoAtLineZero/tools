@@ -80,4 +80,49 @@ fn launch_processors<T: Send + 'static>(
     });
 }
 
+fn launch_scrapers<T: Send + 'static>(
+    &self,
+    concurrency: usize,
+    spider: Arc<dyn Spider<Item = T>>,
+    urls_to_visit: mpsc::Receiver<String>,
+    new_urls: mpsc::Sender<(String, Vec<String>)>,
+    items_tx: mpsc::Sender<T>,
+    active_spiders: Arc<AtomicUsize>,
+    delay: Duration,
+    barrier: Arc<Barrier>,
+) {
+    tokio::spawn(async move {
+        tokio_stream::wrappers::ReceiverStream::new(urls_to_visit)
+            .for_each_concurrent(concurrency, |queued_url| {
+                let queued_url = queued_url.clone();
+                async {
+                    active_spiders.fetch_add(1, Ordering::SeqCst);
+                    let mut urls = Vec::new();
+                    let res = spider
+                        .scrape(queue_url.clone())
+                        .await
+                        .map_err(|err| {
+                            log__error!("{}", err);
+                            err
+                        })
+                        .ok();
 
+                    if let Some((items, new_urls)) = res {
+                        for item in items {
+                            let _ = items_tx.send(item).await;
+                        }
+                        urls = new_urls;
+                    }
+
+                    let _ = new_urls.send((queue_url, urls)).await;
+                    sleep(delay).await;
+                    active_spiders.fetch_sub(1, Ordering::SeqCst);
+                }
+            })
+        .await;
+
+    drop(items_tx);
+    barrier.wait().await;
+
+    });
+}
