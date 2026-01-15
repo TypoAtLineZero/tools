@@ -62,4 +62,22 @@ pub async fn run<T: Send + 'static>(&self, spider: Arc<dyn Spider<Item = T>>) {
     barrier.wait().await;
 }
 
+fn launch_processors<T: Send + 'static>(
+    &self,
+    concurrency: usize,
+    spider: Arc<dyn Spider<Item = T>>,
+    items: mpsc::Receiver<T>,
+    barrier: Arc<Barrier>,
+    ) { 
+    tokio::spawn(async move {
+        tokio_stream::wrappers::ReceiverStream::new(items)
+            .for_each_concurrent(concurrency, |item| async {
+                let _ = spider.process(item).await;
+            })
+            .await;
+        
+        barrier.wait().await;
+    });
+}
+
 
