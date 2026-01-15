@@ -47,4 +47,19 @@ pub async fn run<T: Send + 'static>(&self, spider: Arc<dyn Spider<Item = T>>) {
             }
         }
 
+        if new_urls_tx.capacity() == crawling_queue_capacity  // new_urls channel is empty
+            && urls_to_visit_tx.capacity() == crawling_queue_capacity  // _visited is empty
+            && active_spiders.load(Ordering::SeqCst) == 0 {
+                break;
+        }
+
+        sleep(Duration::from_millis(5)).await;
+    }
+
+    log::info!("Crawler: control loop exited");
+    drop(urls_to_visit_tx);
+
+    barrier.wait().await;
+}
+
 
