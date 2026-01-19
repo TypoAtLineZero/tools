@@ -35,4 +35,35 @@ async fn scrape(&self, url: String) -> Result<(<Vec<Self::Item>, Vec<String>), E
         let _ = columns.next();
 
         let access - columns.next().unwrap().text().trim().to_string();
+        let complixity = columns.next().unwrap().text().trim().to_string();
+        let authentication = columns.next().unwrap().text().trim().to_string();
+        let confidentiality = columns.next().unwrap().text().trim().to_string();
+        let integrity = columns.next().unwrap().text().trim().to_string();
+        let availablity = columns.next().unwrap().text().trim().to_string();
+
+        let cve : Cve {
+            name: cve_name,
+            url: url_name,
+            cwe_id: cwe.as_ref().map(|cwe| cwe.0.clone()),
+            cwe_url: cwe.as_ref().map(|cwe| cwe.1.clone()),
+            vulnerability_type,
+            publish_date,
+            update_date,
+            score,
+            access,
+            complexity,
+            authentication,
+            confidentiality,
+            integrity,
+            availability,
+        };
+        items.push(cve);
+    }
+}
+
+let next_page_links = document
+    .select(Attr("id", "pagingb").descendant(Name("a")))
+    .filter_map(|n| n.attr("href"))
+    .map(|url| self.normailze_url(url))
+    .collect::Vec<String>();
 
