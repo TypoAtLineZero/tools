@@ -15,3 +15,24 @@ pub struct Cve {
     integrity: String,
     availability: String,
 }
+
+async fn scrape(&self, url: String) -> Result<(<Vec<Self::Item>, Vec<String>), Error> {
+    log::info!("Visiting: {}", url);
+
+    let http_res = self.http_client.get(url).send().await?.text().await?;
+    let mut items = Vec::new();
+
+    let document = Document::from(http_res.as_str());
+
+    let rows = document.select(Attr("id", "vulnslisttable").descendant(Class("srrowns")));
+    for row in rows {
+        let mut columns = row.select(Name("td"));
+        let _ = columns.next();
+        let cve_link = columns.next().unwrap().select(Name("a")).next().unwrap();
+        let cve_name = cve_link.text().trim().to_string();
+        let cve_url = self.normalize_url(cve_link.attr("href").unwrap());
+
+        let _ = columns.next();
+
+        let access - columns.next().unwrap().text().trim().to_string();
+
