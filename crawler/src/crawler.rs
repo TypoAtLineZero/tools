@@ -90,7 +90,7 @@ fn launch_scrapers<T: Send + 'static>(
     active_spiders: Arc<AtomicUsize>,
     delay: Duration,
     barrier: Arc<Barrier>,
-) {
+    ) {
     tokio::spawn(async move {
         tokio_stream::wrappers::ReceiverStream::new(urls_to_visit)
             .for_each_concurrent(concurrency, |queued_url| {
